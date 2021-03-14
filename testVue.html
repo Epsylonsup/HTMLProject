@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Jukebox</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<style>
+body {
+  background-image: url('https://img.chefdentreprise.com/Img/BREVE/2015/5/255100/Miser-musique-mieux-vendre-F.jpg');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+</style>
+<body>
+  <div id="app" class="container">
+	<img src="https://cdn.statically.io/img/images.vexels.com/media/users/3/151074/isolated/lists/4280c55bd652bbda98166abaecf50a02-jukebox-sketch.png" align=left /> 
+		<h1><strong> Ce site est une radio où la chanson la plus voulu sera joué.</strong></h1>
+
+	<h1><strong> Ce site est une radio où la chanson la plus voulue sera jouée.</strong></h1>
+
+    <Strong>Entrer le nom de la chanson et de l'artiste voulu de la meme maniere qu'une recherche youtube dans la barre de recherche (plus vous etes precis dans la recherche plus vous aurez de chance d'avoir la bonne musique).<br>
+    Votre chanson apparaitra dans la liste sous le bouton avec votre vote. Si vous n'avez pas d'idée vous pouvez voter pour une chanson proposée par un autre utilisateur. La chanson avec le plus de vote sera la prochaine a passer.</strong><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    
+	<div class="row">
+		<div class="col-md-12">
+			<div id="videos">
+
+			</div>
+		</div>
+	</div>
+	
+    <form id="form" v-on:submit.prevent="addSong">
+	  <div class="form-group">
+    	<input v-model="song.name" id="search" required/>
+	  </div>
+	  <div class="form-group">
+		<button type="submit">Add Song</button>
+	  </div>
+    </form>
+	
+	<change-button id="change"></change-button>
+
+  
+  
+  <hr>
+  <song-card v-for="song in songs" :song="song" :key="song.name"></song-card>
+  </div>
+
+
+  <script>
+	var voted =false;
+	var initiate=false
+	Vue.component('change-button', {
+          template: `<button @click="clickHandler">Change song</button>`,
+          methods: {
+            clickHandler() {
+				app.Next();
+            }
+          }
+      });
+	Vue.component('song-card', {
+		props: ['song'],
+		data() {
+          return {
+            song: {...this.song}
+          }
+        },
+		template: `
+		<div style="border-radius: .25rem; border: 1px solid #ECECEC;">
+			<h2>{{ song.name }}</small></h2>
+
+			<span>{{ song.rating }}</span>	
+
+			<button @click="increaseRating">Vote for</button>
+		</div>	
+  `		,
+		methods: {
+			increaseRating() {
+				if(!voted)
+				{
+					this.song.rating++
+					//voted=true;
+				}
+				this.getNext();
+			}
+		}
+	});
+    const app = new Vue({
+      el: '#app',
+      data: {
+		songs: [
+		],
+		song: {name:"", rating:1}
+		
+      },
+      methods: {
+		
+        addSong() {
+		  var songsname=this.songs.map(function (song) {
+		    return song.name
+          });
+		  if(songsname.indexOf(this.song.name)==-1)
+		  {
+            this.songs.push({ name: this.song.name, rating:0 });
+          }
+		  else
+		  {
+			if(!voted)
+				{
+				  this.songs[songsname.indexOf(this.song.name)].rating++;
+				  //voted =true;
+				}
+		    else
+			{
+			  alert("You already voted");
+			}
+		  }
+		  if(!initiate)
+		  {
+			this.Next();
+			initiate=true;
+		  }
+		},
+		
+		getNext() {
+			var nextsong={name:'', rating:-1};
+			this.songs.forEach(element =>  
+				(element.rating>nextsong.rating ? nextsong=element : 0)
+				
+				);
+			this.songs=[];
+			return(nextsong.name);	
+		},
+		
+		videoSearch(key, search,maxResults){
+			var video = ''
+			$("#videos").empty()
+
+			$.get("https://www.googleapis.com/youtube/v3/search?key=" + key + "&type=video&part=snippet&maxResults=" + maxResults + "&q=" + search, function(data){
+
+				data.items.forEach(item => {
+					video = `                
+                
+					<iframe id="iframe" widht="420" height="315" src="http://www.youtube.com/embed/${item.id.videoId}?autoplay=1&mute=1&enablejsapi=1" frameborder="0" allowfullscreen align=right events: {onReady: onPlayerReady, onStateChange: onPlayerStateChange}></iframe> 
+                
+					`
+
+					$("#videos").append(video)
+				});
+				
+				
+				video.addEventListener("onStateChange", function(state){
+					if(state === 0){
+						Next();
+				}
+				})	;
+
+			})
+        
+		},
+		Next()
+		{
+			var API_KEY = "AIzaSyCp-TekHXSD3U-YR9arYkWIkqQRuHb45_Q"
+			event.preventDefault()
+			this.videoSearch(API_KEY, this.getNext(), 1 );
+		}
+		
+      }
+    });
+  </script>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</html>
